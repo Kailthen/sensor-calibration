@@ -66,6 +66,7 @@ class Projector(object):
 
         if normalize:
             points = points / points[2:3, :].repeat(3, 0).reshape(3, nbr_points)
+            # points[:2] /= points[2,:]
 
         return points
 

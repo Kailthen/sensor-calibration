@@ -327,12 +327,15 @@ def point_cloud_to_fileobj(pc, fileobj, data_compression=None):
         metadata['data'] = data_compression
 
     header = write_header(metadata)
-    fileobj.write(header)
+    fileobj.write(header.encode('UTF-8'))
     if metadata['data'].lower() == 'ascii':
         fmtstr = build_ascii_fmtstr(pc)
+        for f in pc.metadata['fields']:
+            pc.pc_data[f]
         np.savetxt(fileobj, pc.pc_data, fmt=fmtstr)
     elif metadata['data'].lower() == 'binary':
-        fileobj.write(pc.pc_data.tostring('C'))
+        bt = pc.pc_data.tostring('C')
+        fileobj.write(bt)
     elif metadata['data'].lower() == 'binary_compressed':
         # TODO
         # a '_' field is ignored by pcl and breakes compressed point clouds.
@@ -383,14 +386,14 @@ def save_point_cloud(pc, fname):
 def save_point_cloud_bin(pc, fname):
     """ Save pointcloud to fname in binary format.
     """
-    with open(fname, 'w') as f:
+    with open(fname, 'wb') as f:
         point_cloud_to_fileobj(pc, f, 'binary')
 
 
 def save_point_cloud_bin_compressed(pc, fname):
     """ Save pointcloud to fname in binary compressed format.
     """
-    with open(fname, 'w') as f:
+    with open(fname, 'wb') as f:
         point_cloud_to_fileobj(pc, f, 'binary_compressed')
 
 
@@ -703,7 +706,7 @@ class PointCloud(object):
             warnings.warn('data_compression keyword is deprecated for'
                           ' compression')
             compression = kwargs['data_compression']
-        with open(fname, 'w') as f:
+        with open(fname, 'wb') as f:
             point_cloud_to_fileobj(self, f, compression)
 
     def save_pcd_to_fileobj(self, fileobj, compression=None, **kwargs):
@@ -777,6 +780,7 @@ class PointCloud(object):
             md['count'].append(1)
         md['width'] = len(pc_data)
         md['points'] = len(pc_data)
+        
         pc = PointCloud(md, pc_data)
         return pc
 

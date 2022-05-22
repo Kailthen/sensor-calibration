@@ -13,6 +13,7 @@ import cv2
 
 import rosbag
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
 def main(args):
@@ -24,10 +25,16 @@ def main(args):
     bag = rosbag.Bag(args.bag_file, "r")
     bridge = CvBridge()
     count = 0
-    for topic, msg, t in bag.read_messages(topics=[args.image_topic]):
-        cv_img = bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
-        cv2.imwrite(os.path.join(args.output_dir, "{:.9f}.png".format(t.to_sec())), cv_img)
+    for topic, msg, t in bag.read_messages(topics=[args.image_topic]):
+
+        if not isinstance(msg, CompressedImage):
+            print("Image: ", msg.height, ", ",  msg.width)
+            cv_img = bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        else:
+            cv_img = bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="passthrough")
+
+        cv2.imwrite(os.path.join(args.output_dir, "{:.9f}.jpg".format(t.to_sec())), cv_img)
         print("Wrote image %i" % count)
 
         count += 1
