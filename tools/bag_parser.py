@@ -15,6 +15,9 @@ from sensor_msgs.msg import PointCloud2
 from cv_bridge import CvBridge
 from rospy import Time
 
+import sensor_msgs.point_cloud2 as pc2
+from pc_utils import pointcloud2_to_array
+
 import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(BASE_DIR)
@@ -48,6 +51,13 @@ def main(args):
             tfile = os.path.join(args.topic_dir[topic], "{:.9f}.jpg".format(msg.header.stamp.to_sec()))
             cv2.imwrite(tfile, cv_img)
             print("Save Image to {}".format(tfile))
+        elif "PointCloud2" in str(type(msg)):
+            pcd_arr = pointcloud2_to_array(msg)
+            pcd_file = os.path.join(args.topic_dir[topic], "{:.9f}.arr".format(msg.header.stamp.to_sec()))
+            # pypcd.save_point_cloud_bin_compressed(pcd, pcd_file)
+            np.save(pcd_file, pcd_arr, allow_pickle=True)
+            print("Save pcd to {}".format(pcd_file))
+
         elif "CustomMsg" in str(type(msg)):
             from livox_ros_driver.msg import CustomMsg
             # convert to numpy array
